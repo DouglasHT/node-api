@@ -5,10 +5,22 @@ const MOCK_HEROIS_CADASTRAR = {
   nome: "Test 1",
   poder: "Testar",
 };
+const MOCK_HEROIS_INICIAL = {
+  nome: "Test 1",
+  poder: "Testar",
+};
+let MOCK_ID = "";
 
 describe("suite de testes da Api Heroes", function () {
   this.beforeAll(async () => {
     app = await api;
+    const result = await app.inject({
+      method: "POST",
+      url: `/herois`,
+      payload: JSON.stringify(MOCK_HEROIS_INICIAL),
+    });
+    const dados = JSON.parse(result.payload);
+    MOCK_ID = dados._id;
   });
 
   it("listar herois", async () => {
@@ -71,5 +83,45 @@ describe("suite de testes da Api Heroes", function () {
     assert.ok(statusCode === 200);
     assert.notStrictEqual(_id, undefined);
     assert.deepEqual(message, "Heroi cadastrado com sucesso!");
+  });
+
+  it("atualizar PATCH - /herois/:id", async () => {
+    const _id = MOCK_ID;
+    const expected = {
+      nome: "Test 1",
+      poder: "Super Test",
+    };
+
+    const result = await app.inject({
+      method: "PATCH",
+      url: `/herois/${_id}`,
+      payload: JSON.stringify(expected),
+    });
+
+    const statusCode = result.statusCode;
+    const dados = JSON.parse(result.payload);
+
+    assert.ok(statusCode === 200);
+    assert.deepEqual(dados.message, "Heroi atualizado com sucesso!");
+  });
+
+  it("atualizar PATCH - /herois/:id - não deve atualizar com ID incorreto", async () => {
+    const _id = `6363f415b9f071e398eb1e98`;
+    const expected = {
+      nome: "Test 1",
+      poder: "Super Test",
+    };
+
+    const result = await app.inject({
+      method: "PATCH",
+      url: `/herois/${_id}`,
+      payload: JSON.stringify(expected),
+    });
+
+    const statusCode = result.statusCode;
+    const dados = JSON.parse(result.payload);
+
+    assert.ok(statusCode === 200);
+    assert.deepEqual(dados.message, "Nao foi possivel atualizar!");
   });
 });
