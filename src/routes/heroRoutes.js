@@ -1,5 +1,7 @@
 const Joi = require("joi");
 const BaseRoute = require("./base/baseRoute");
+const Boom = require("Boom");
+
 const failAction = (request, headers, error) => {
   throw error;
 };
@@ -40,7 +42,7 @@ class HeroRoutes extends BaseRoute {
           );
         } catch (error) {
           console.log("DEU RUIM", error);
-          return "ERRO";
+          return Boom.internal();
         }
       },
     };
@@ -66,7 +68,7 @@ class HeroRoutes extends BaseRoute {
           return { message: "Heroi cadastrado com sucesso!", _id: result._id };
         } catch (error) {
           console.log("FAIL", error);
-          return "Internal Error!";
+          return Boom.internal();
         }
       },
     };
@@ -104,7 +106,36 @@ class HeroRoutes extends BaseRoute {
           return { message: "Heroi atualizado com sucesso!" };
         } catch (error) {
           console.log("FAIL", error);
-          return "Internal Error!";
+          return Boom.internal();
+        }
+      },
+    };
+  }
+
+  delete() {
+    return {
+      path: "/herois/{id}",
+      method: "DELETE",
+      config: {
+        validate: {
+          failAction,
+          params: {
+            id: Joi.string().required(),
+          },
+        },
+      },
+      handler: async (request) => {
+        try {
+          const { id } = request.params;
+          const result = await this.db.delete(id);
+
+          if (result.deletedCount !== 1)
+            return { message: "Nao foi possivel remover o item" };
+
+          return { message: "Heroi removido com sucesso!" };
+        } catch (error) {
+          console.log("FAIL", error);
+          return Boom.internal();
         }
       },
     };
